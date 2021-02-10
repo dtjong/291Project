@@ -2,7 +2,14 @@ import unittest
 from constraint_solver import *
 
 class TestSolver(unittest.TestCase):
-    pass
+    def test_two_view_vstack(self):
+        root = View([0, 0], [100, 100], view_type=ViewType.VStack)
+        child1 = View([10, 10], [40, 90], root)
+        child2 = View([60, 10], [90, 90], root)
+
+        view_list = [root, child1, child2]
+        views_output = ConstraintSolver(view_list).solve()
+        self.assertTrue(True)
 
 # Testing constraint -> coord math
 class TestConstraints(unittest.TestCase):

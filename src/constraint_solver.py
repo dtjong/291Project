@@ -1,57 +1,60 @@
 from z3 import *
-from enum import IntEnum
-
-class ViewType(IntEnum):
-    VStack = 0
-    HStack = 1
-    Leaf = 2
-
-class View:
-    def __init__(self, top_left, bot_right, parent=None, view_type=ViewType.Leaf):
-        self.top_left = top_left
-        self.bot_right = bot_right
-        self.parent = parent
-        self.view_type = view_type
-
-        # Constraints for H/VStack
-        self.spacing_constraint = 0
-        # Constraints for leaf views
-        self.padding_constraint = [[0, 0], [0, 0]]
-        self.frame_constraint = None
-
-    def __eq__(self, other):
-        return self.top_left == other.top_left and self.bot_right == other.bot_right
-
-    def __str__(self):
-        return str(self.top_left) + ", " + str(self.bot_right)
-
-    # 0 for height, 1 for width
-    def size(self, axis):
-        return self.bot_right[axis] - self.top_left[axis]
-
-    def is_framed(self, axis):
-        return self.frame_constraint != None and self.frame_constraint[axis] != None
-
-    # Below are functions to generate the constraints
-    def gen_padding(self, top, bot=None, left=None, right=None):
-        if bot == None:
-            bot = top
-        if left == None:
-            left = top
-        if right == None:
-            right = left
-        self.padding_constraint = [[top, bot], [left, right]]
-    def gen_spacing(self, spacing):
-        self.spacing_constraint = spacing
-
-    def gen_frame(self, height=None, width=None):
-        self.frame_constraint = [height, width]
+from view import *
 
 # Constraint Solver for one level (no hierarchy)
 class ConstraintSolver:
     def __init__(self, views):
-        self.s = Solver()
         self.views = views
+
+    def solve(self):
+        s = Solver()
+        Spacing = Real('Spacing')
+        Frames = [[Real('FrameHeight' + str(i)) for i in range(len(self.views) - 1)],
+                  [Real('FrameWidth' + str(i)) for i in range(len(self.views) - 1)]]
+        PrePad = [[Real('PadTop' + str(i)) for i in range(len(self.views) - 1)],
+                  [Real('PadLeft' + str(i)) for i in range(len(self.views) - 1)]]
+        PostPad = [[Real('PadBot' + str(i)) for i in range(len(self.views) - 1)],
+                  [Real('PadRight' + str(i)) for i in range(len(self.views) - 1)]]
+
+        root = self.views[0]
+        major_axis = int(root.view_type)
+        minor_axis = int(ViewType.HStack if root.view_type == ViewType.VStack else ViewType.VStack)
+        for i, view in enumerate(self.views[1:]):
+            fsize = (root.size(major_axis) \
+                     - Spacing * (len(self.views) - 2) \
+                     - Sum(PrePad[major_axis]) \
+                     - Sum(PostPad[major_axis]) \
+                     - Sum(Frames[major_axis])) \
+                     / Sum([If(sz == 0, 1, 0) for sz in Frames[major_axis]])
+            top_major = Sum(Frames[major_axis][:i]) \
+                      + Sum(PrePad[major_axis][:i+1]) \
+                      + Sum(PostPad[major_axis][:i]) \
+                      + Sum([If(sz == 0, 1, 0) for sz in Frames[major_axis][:i]]) * fsize \
+                      + root.top_left[major_axis]
+            bot_major = top_major + If(Frames[major_axis][i] == 0, fsize, Frames[major_axis][i])
+            top_minor = root.top_left[minor_axis] + PrePad[minor_axis][i]
+            bot_minor = If(Frames[minor_axis][i] == 0,
+                           root.bot_right[minor_axis] - PostPad[minor_axis][i],
+                           top_minor + Frames[minor_axis][i])
+            s.add(view.top_left[major_axis] == top_major)
+            s.add(view.bot_right[major_axis] == bot_major)
+            s.add(view.top_left[minor_axis] == top_minor)
+            s.add(view.bot_right[minor_axis] == bot_minor)
+        if s.check() == sat:
+            m = s.model()
+            print(m)
+            def get_long(realval):
+                return m[realval].numerator_as_long() / m[realval].denominator_as_long()
+            root.gen_spacing(get_long(Spacing))
+            for i, view in enumerate(self.views[1:]):
+                view.gen_frame(get_long(Frames[0][i]), get_long(Frames[1][i]))
+                view.gen_padding(get_long(PrePad[0][i]),
+                                 get_long(PostPad[0][i]),
+                                 get_long(PrePad[1][i]),
+                                 get_long(PostPad[1][i]))
+            print(self.verify())
+        else:
+            print("UNSAT")
 
     def verify(self):
         constrained_views = self.constraint_to_coords()

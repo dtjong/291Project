@@ -6,10 +6,9 @@ class ViewType(IntEnum):
     Leaf = 2
 
 class View:
-    def __init__(self, top_left, bot_right, parent=None, view_type=ViewType.Leaf):
+    def __init__(self, top_left, bot_right, view_type=ViewType.Leaf):
         self.top_left = top_left
         self.bot_right = bot_right
-        self.parent = parent
         self.view_type = view_type
 
         # Constraints for H/VStack

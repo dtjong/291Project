@@ -1,5 +1,6 @@
 import unittest
 from constraint_solver import *
+from hierarchy import *
 
 class TestSolver(unittest.TestCase):
     def test_two_view_vstack(self):
@@ -9,7 +10,6 @@ class TestSolver(unittest.TestCase):
 
         view_list = [root, child1, child2]
         views_output = ConstraintSolver(view_list).solve()
-        self.assertTrue(True)
 
 # Testing constraint -> coord math
 class TestConstraints(unittest.TestCase):

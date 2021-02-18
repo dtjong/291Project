@@ -7,7 +7,7 @@ class ConstraintSolver:
         self.views = views
 
     def solve(self):
-        s = Solver()
+        s = Optimize()
         Spacing = Real('Spacing')
         Frames = [[Real('FrameHeight' + str(i)) for i in range(len(self.views) - 1)],
                   [Real('FrameWidth' + str(i)) for i in range(len(self.views) - 1)]]
@@ -30,6 +30,7 @@ class ConstraintSolver:
                       + Sum(PrePad[major_axis][:i+1]) \
                       + Sum(PostPad[major_axis][:i]) \
                       + Sum([If(sz == 0, 1, 0) for sz in Frames[major_axis][:i]]) * fsize \
+                      + Spacing * i \
                       + root.top_left[major_axis]
             bot_major = top_major + If(Frames[major_axis][i] == 0, fsize, Frames[major_axis][i])
             top_minor = root.top_left[minor_axis] + PrePad[minor_axis][i]
@@ -40,6 +41,14 @@ class ConstraintSolver:
             s.add(view.bot_right[major_axis] == bot_major)
             s.add(view.top_left[minor_axis] == top_minor)
             s.add(view.bot_right[minor_axis] == bot_minor)
+        # Optimization
+        constrained_frames = Sum([If(sz == 0, 0, 1) for sz in Frames[major_axis] + Frames[minor_axis]])
+        s.minimize(constrained_frames)
+        symmetric_padding = Sum([If(pre == post, 1, 0) for pre, post in
+                                 zip(PrePad[minor_axis] + PrePad[major_axis],
+                                     PostPad[minor_axis] + PostPad[major_axis])])
+        s.maximize(symmetric_padding)
+
         if s.check() == sat:
             m = s.model()
             print(m)

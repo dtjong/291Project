@@ -8,7 +8,7 @@ class Canvas(tk.Tk):
         self.canvas.pack(side="top", fill="both", expand=True)
 
         instr_text1 = "Press, drag, and release mouse to draw rectangles representing UI elements. "
-        instr_text2 = "Click them to delete"
+        instr_text2 = "Click any element to delete all elements"
 
         self.instruction1 = tk.Label(self, text=instr_text1)
         self.instruction1.place(x=30, y=100)
@@ -18,7 +18,6 @@ class Canvas(tk.Tk):
         self.canvas.bind("<ButtonPress-1>", self.on_button_press)
         self.canvas.bind("<B1-Motion>", self.on_move_press)
         self.canvas.bind("<ButtonRelease-1>", self.on_button_release)
-        # self.canvas.bind("<Button-1>", self.on_click)
 
         self.rect = None
         self.start_x = None
@@ -32,7 +31,8 @@ class Canvas(tk.Tk):
         # save mouse drag start position
         self.start_x = event.x
         self.start_y = event.y
-        self.rect = self.canvas.create_rectangle(self.x, self.y, 1, 1, fill="black")
+        self.rect = self.canvas.create_rectangle(self.x, self.y, 1, 1, fill="black", tags="element")
+        self.canvas.tag_bind("element", "<Button-1>", self.on_click)
 
     def on_move_press(self, event):
         curX, curY = (event.x, event.y)
@@ -44,8 +44,8 @@ class Canvas(tk.Tk):
         pass
 
     def on_click(self, event):
-        # Let one rect disappear on click
-        pass
+        # Clear the canvas
+        event.widget.destroy()
     
 if __name__ == "__main__":
     app = Canvas()

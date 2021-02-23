@@ -9,6 +9,8 @@ class ConstraintSolver:
     def solve(self):
         s = Optimize()
         Spacing = Real('Spacing')
+        # 0 = leading, 1 = center, 2 = trailing
+        Alignment = Int('Alignment')
         Frames = [[Real('FrameHeight' + str(i)) for i in range(len(self.views) - 1)],
                   [Real('FrameWidth' + str(i)) for i in range(len(self.views) - 1)]]
         PrePad = [[Real('PadTop' + str(i)) for i in range(len(self.views) - 1)],
@@ -33,14 +35,37 @@ class ConstraintSolver:
                       + Spacing * i \
                       + root.top_left[major_axis]
             bot_major = top_major + If(Frames[major_axis][i] == 0, fsize, Frames[major_axis][i])
-            top_minor = root.top_left[minor_axis] + PrePad[minor_axis][i]
-            bot_minor = If(Frames[minor_axis][i] == 0,
-                           root.bot_right[minor_axis] - PostPad[minor_axis][i],
-                           top_minor + Frames[minor_axis][i])
+
+            top_minor_nf = root.top_left[minor_axis] + PrePad[minor_axis][i]
+            bot_minor_nf = root.bot_right[minor_axis] - PostPad[minor_axis][i]
+
+            top_minor_alead = root.top_left[minor_axis] + PrePad[minor_axis][i]
+            bot_minor_alead = top_minor_alead + Frames[minor_axis][i]
+
+            top_minor_acenter = (root.bot_right[minor_axis] - root.top_left[minor_axis] \
+                                - PrePad[minor_axis][i] - PostPad[minor_axis][i] - Frames[minor_axis][i]) / 2 \
+                                + top_minor_alead
+            bot_minor_acenter = top_minor_acenter + Frames[minor_axis][i]
+
+            bot_minor_atrail = root.bot_right[minor_axis] - PostPad[minor_axis][i]
+            top_minor_atrail = bot_minor_atrail - Frames[minor_axis][i]
+
             s.add(view.top_left[major_axis] == top_major)
             s.add(view.bot_right[major_axis] == bot_major)
-            s.add(view.top_left[minor_axis] == top_minor)
-            s.add(view.bot_right[minor_axis] == bot_minor)
+            s.add(view.top_left[minor_axis] == If(Frames[minor_axis][i] == 0,
+                                                  top_minor_nf,
+                                               If(Alignment == 0,
+                                                  top_minor_alead,
+                                               If(Alignment == 1,
+                                                  top_minor_acenter,
+                                                  top_minor_atrail))))
+            s.add(view.bot_right[minor_axis] == If(Frames[minor_axis][i] == 0,
+                                                  bot_minor_nf,
+                                               If(Alignment == 0,
+                                                  bot_minor_alead,
+                                               If(Alignment == 1,
+                                                  bot_minor_acenter,
+                                                  bot_minor_atrail))))
         # Optimization
         constrained_frames = Sum([If(sz == 0, 0, 1) for sz in Frames[major_axis] + Frames[minor_axis]])
         s.minimize(constrained_frames)
@@ -48,6 +73,9 @@ class ConstraintSolver:
                                  zip(PrePad[minor_axis] + PrePad[major_axis],
                                      PostPad[minor_axis] + PostPad[major_axis])])
         s.maximize(symmetric_padding)
+        # prefer center alignment over others
+        is_centered = If(Alignment == 1, 1, 0)
+        s.maximize(is_centered)
 
         if s.check() == sat:
             m = s.model()

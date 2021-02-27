@@ -2,6 +2,26 @@ import unittest
 from constraint_solver import *
 from hierarchy import *
 
+class TestHierarchyInference(unittest.TestCase):
+    def test_hierarchy_inference_simple(self):
+        root = View([0, 0], [100, 100])
+        child1 = View([10, 10], [40, 90], root)
+        child2 = View([60, 10], [90, 90], root)
+        hierarchy = infer_hierarchy([root, child1, child2])
+        self.assertListEqual(hierarchy.children, [child1, child2])
+
+    def test_hierarchy_inference_two_levels(self):
+        root = View([0, 0], [100, 100])
+        child1 = View([10, 10], [40, 40], root)
+        child2 = View([10, 60], [40, 90], root)
+        child3 = View([60, 10], [90, 90], root)
+        hierarchy = infer_hierarchy([root, child1, child2, child3])
+        self.assertFalse(child1 in hierarchy.children)
+        self.assertFalse(child2 in hierarchy.children)
+        self.assertTrue(child3 in hierarchy.children)
+        self.assertTrue(child1 in hierarchy.children[0].children)
+        self.assertTrue(child2 in hierarchy.children[0].children)
+
 class TestSolver(unittest.TestCase):
     def test_two_view_vstack(self):
         root = View([0, 0], [100, 100], view_type=ViewType.VStack)

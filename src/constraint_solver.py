@@ -82,6 +82,7 @@ class ConstraintSolver:
             print(m)
             def get_long(realval):
                 return m[realval].numerator_as_long() / m[realval].denominator_as_long()
+            view.alignment = m[Alignment].as_long()
             root.gen_spacing(get_long(Spacing))
             for i, view in enumerate(self.views[1:]):
                 view.gen_frame(get_long(Frames[0][i]), get_long(Frames[1][i]))

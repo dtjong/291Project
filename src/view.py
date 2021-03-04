@@ -16,6 +16,8 @@ class View:
         # Constraints for leaf views
         self.padding_constraint = [[0, 0], [0, 0]]
         self.frame_constraint = None
+        # 0 = left, 1 = center, 2 = right
+        self.alignment = 1
 
     def __eq__(self, other):
         return self.top_left == other.top_left and self.bot_right == other.bot_right

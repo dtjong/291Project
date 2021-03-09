@@ -23,7 +23,7 @@ class View:
         return self.top_left == other.top_left and self.bot_right == other.bot_right
 
     def __str__(self):
-        return str(self.top_left) + ", " + str(self.bot_right)
+        return str(self.top_left) + ", " + str(self.bot_right) + " " + str(self.view_type)
 
     # 0 for height, 1 for width
     def size(self, axis):

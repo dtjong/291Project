@@ -7,15 +7,16 @@ class Hierarchy(View):
         self.children = children
 
     def solve(self):
+        print([str(child) for child in [self] + self.children])
         ConstraintSolver([self] + self.children).solve()
-        for child in children:
+        for child in self.children:
             if isinstance(child, Hierarchy):
                 child.solve()
 
 
     def to_swiftui(self):
         #TODO: convert view hierarchy's constraints to swiftui
-        pass
+        return ""
 
 def divide_views(views, axis):
     '''Divides the given views by the axis where possible.
@@ -43,7 +44,7 @@ def divide_views(views, axis):
             hierarchy_complexity += complexity
     top_left = [min([view.top_left[0] for view in children]), min([view.top_left[1] for view in children])]
     bot_right = [max([view.bot_right[0] for view in children]), max([view.bot_right[1] for view in children])]
-    root_hierarchy = Hierarchy(top_left, bot_right, view_type=(axis + 1) % 2, children=children)
+    root_hierarchy = Hierarchy(top_left, bot_right, view_type=ViewType(axis), children=children)
     return root_hierarchy, hierarchy_complexity
 
 def infer_hierarchy(views):

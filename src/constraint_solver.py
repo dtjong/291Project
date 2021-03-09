@@ -18,6 +18,16 @@ class ConstraintSolver:
         PostPad = [[Real('PadBot' + str(i)) for i in range(len(self.views) - 1)],
                   [Real('PadRight' + str(i)) for i in range(len(self.views) - 1)]]
 
+        s.add(Spacing >= 0)
+        s.add(Alignment >= 0)
+        s.add(Alignment <= 2)
+        def nonzero_list(l):
+            for prop in l[0] + l[1]:
+                s.add(prop >= 0)
+        nonzero_list(Frames)
+        nonzero_list(PrePad)
+        nonzero_list(PostPad)
+
         root = self.views[0]
         major_axis = int(root.view_type)
         minor_axis = int(ViewType.HStack if root.view_type == ViewType.VStack else ViewType.VStack)
@@ -34,7 +44,8 @@ class ConstraintSolver:
                       + Sum([If(sz == 0, 1, 0) for sz in Frames[major_axis][:i]]) * fsize \
                       + Spacing * i \
                       + root.top_left[major_axis]
-            bot_major = top_major + If(Frames[major_axis][i] == 0, fsize, Frames[major_axis][i])
+            bot_major = top_major + If(Frames[major_axis][i] == 0, fsize,
+                                       Frames[major_axis][i])
 
             top_minor_nf = root.top_left[minor_axis] + PrePad[minor_axis][i]
             bot_minor_nf = root.bot_right[minor_axis] - PostPad[minor_axis][i]

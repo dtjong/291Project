@@ -25,8 +25,8 @@ class TestHierarchyInference(unittest.TestCase):
 class TestSolver(unittest.TestCase):
     def test_two_view_vstack(self):
         root = View([0, 0], [100, 100], view_type=ViewType.VStack)
-        child1 = View([10, 10], [40, 90], root)
-        child2 = View([60, 10], [90, 90], root)
+        child1 = View([10, 11], [39, 89], root)
+        child2 = View([66, 30], [88, 60], root)
 
         view_list = [root, child1, child2]
         views_output = ConstraintSolver(view_list).solve()

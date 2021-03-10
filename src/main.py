@@ -19,6 +19,8 @@ class Canvas(tk.Tk):
         self.submitbt.pack(side=tk.LEFT)
         self.clearbt = tk.Button(self.bar, text="clear", command=self.clear)
         self.clearbt.pack(side=tk.LEFT)
+        self.snapbt = tk.Button(self.bar, text="snap", command=self.snap)
+        self.snapbt.pack(side=tk.LEFT)
         self.bar.pack()
 
         instr_text1 = "Press, drag, and release mouse to draw rectangles representing UI elements. "
@@ -30,6 +32,19 @@ class Canvas(tk.Tk):
         hier = infer_hierarchy(self.views)
         hier.solve()
         print(hier.to_swiftui()) #TODO: Present swiftUI to user
+
+        ## TESTING CLEANSE
+
+    def snap(self):
+        hier = infer_hierarchy(self.views)
+        self.clear()
+        hier.cleanse()
+        self.views.extend(hier.flatlist())
+        for view in self.views[1:]:
+            self.canvas.create_rectangle(view.top_left[1], view.top_left[0],
+                                         view.bot_right[1], view.bot_right[0],
+                                         fill="black", tags="element")
+
 
     def create_canvas(self):
         self.canvas = tk.Canvas(self.frame, width=self.dimensions[1], height=self.dimensions[0], cursor="cross")

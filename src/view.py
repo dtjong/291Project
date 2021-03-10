@@ -1,4 +1,5 @@
 from enum import IntEnum
+from copy import deepcopy
 
 class ViewType(IntEnum):
     VStack = 0
@@ -29,6 +30,9 @@ class View:
     def size(self, axis):
         return self.bot_right[axis] - self.top_left[axis]
 
+    def center(self, axis):
+        return (self.bot_right[axis] + self.top_left[axis]) / 2
+
     def is_framed(self, axis):
         return self.frame_constraint != None \
                and self.frame_constraint[axis] != None \
@@ -48,3 +52,16 @@ class View:
 
     def gen_frame(self, height=None, width=None):
         self.frame_constraint = [height, width]
+
+    def deepcopy(self):
+        return View(deepcopy(self.top_left), deepcopy(self.bot_right), self.view_type)
+
+    def move(self, diff):
+        '''Moves top left to new top_left, changing bot_right as well as children
+        '''
+        def add(a, b):
+            return [new + old for new, old in zip(a, b)]
+
+        self.top_left = add(self.top_left, diff)
+        self.bot_right = add(self.bot_right, diff)
+

@@ -27,7 +27,7 @@ class Hierarchy(View):
 
         def can_append(self, view, tolerance):
             self.append(view)
-            valid = self.variance() < tolerance
+            valid = (sum([view.size(self.axis) for view in self.views]) / len(self.views) - view.size(self.axis)) < tolerance
             self.pop()
             return valid
 
@@ -56,7 +56,6 @@ class Hierarchy(View):
         draw. General workflow is cleanse -> solve -> to_swiftui
         '''
         # agree on size
-        print(self)
         SIZE_VARIANCE_TOLERANCE = 50
         for axis in [0, 1]:
             size_groups = []
@@ -78,6 +77,39 @@ class Hierarchy(View):
                 g.enforce()
 
         # snap position
+        POS_TOLERANCE = 50
+        major_axis = int(self.view_type)
+        gap_groups = []
+        dists = [0 for i in range(len(self.children) - 1)]
+        for i in range(len(self.children) - 1):
+            v1, v2 = self.children[i], self.children[i + 1]
+            dist = v2.top_left[major_axis] - v1.bot_right[major_axis]
+            if len(gap_groups) == 0:
+                gap_groups.append([(dist, i)])
+            else:
+                added = False
+                for group in gap_groups:
+                    if abs(sum([p[0] for p in group]) / len(group) - dist) < POS_TOLERANCE:
+                        group.append((dist, i))
+                        added = True
+                        break
+
+                if not added:
+                    gap_groups.append([(dist, i)])
+        for group in gap_groups:
+            avg = sum([p[0] for p in group]) / len(group)
+            for p in group:
+                dists[p[1]] = avg
+
+        running_dist = self.children[0].top_left[major_axis]
+        for i, dist in enumerate(dists):
+            running_dist += self.children[i].size(major_axis)
+            running_dist += dist
+            diff = [0, 0]
+            diff[major_axis] = running_dist - self.children[i + 1].top_left[major_axis]
+            self.children[i + 1].move(diff)
+
+        # minor
         minor_axis = (int(self.view_type) + 1) % 2
         leading = self.top_left[minor_axis]
         trailing = self.bot_right[minor_axis]
@@ -101,8 +133,19 @@ class Hierarchy(View):
                 child.cleanse()
 
     def to_swiftui(self):
-        #TODO: convert view hierarchy's constraints to swiftui
-        return ""
+        suffix = super().to_swiftui()[len(VIEW_DEFAULT):]
+        stackargs = []
+        if self.alignment != -1:
+            if self.view_type == ViewType.VStack:
+                stackargs.append(f"alignment: {'.leading' if self.alignment == 0 else '.trailing'}")
+            if self.view_type == ViewType.HStack:
+                stackargs.append(f"alignment: {'.top' if self.alignment == 0 else '.bottom'}")
+        if self.spacing_constraint > 0:
+            stackargs.append(f"spacing: {self.spacing_constraint}")
+        stacktype = "HStack(" if self.view_type == ViewType.HStack else "VStack("
+
+        content = '\n'.join([view.to_swiftui() for view in self.children])
+        return stacktype + ', '.join(stackargs) + ') {\n' + content + '\n}' + suffix
 
     def deepcopy(self):
         children = [child.deepcopy() for child in self.children]

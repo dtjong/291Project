@@ -3,8 +3,8 @@ from tkinter import ttk
 from view import *
 from hierarchy import *
 
-DEFAULT_WIDTH = 414
-DEFAULT_HEIGHT = 896
+DEFAULT_WIDTH = 375
+DEFAULT_HEIGHT = 667
 
 class Canvas(tk.Tk):
     def __init__(self):

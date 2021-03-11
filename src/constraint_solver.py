@@ -31,6 +31,13 @@ class ConstraintSolver:
         root = self.views[0]
         major_axis = int(root.view_type)
         minor_axis = int(ViewType.HStack if root.view_type == ViewType.VStack else ViewType.VStack)
+
+        stack_top_left = (root.size(major_axis) - (Sum(Frames[major_axis]) \
+                         + Sum(PrePad[major_axis]) \
+                         + Sum(PostPad[major_axis]) \
+                         + Spacing * (len(self.views) - 2))) / 2
+        s.add(root.size(major_axis) - stack_top_left > 0)
+
         for i, view in enumerate(self.views[1:]):
             fsize = (root.size(major_axis) \
                      - Spacing * (len(self.views) - 2) \
@@ -43,7 +50,7 @@ class ConstraintSolver:
                       + Sum(PostPad[major_axis][:i]) \
                       + Sum([If(sz == 0, 1, 0) for sz in Frames[major_axis][:i]]) * fsize \
                       + Spacing * i \
-                      + root.top_left[major_axis]
+                      + If(Sum([If(sz == 0, 1, 0) for sz in Frames[major_axis]]) == 0, stack_top_left, root.top_left[major_axis])
             bot_major = top_major + If(Frames[major_axis][i] == 0, fsize,
                                        Frames[major_axis][i])
 
@@ -78,8 +85,8 @@ class ConstraintSolver:
                                                   bot_minor_acenter,
                                                   bot_minor_atrail))))
         # Optimization
-        constrained_frames = Sum([If(sz == 0, 0, 1) for sz in Frames[major_axis] + Frames[minor_axis]])
-        s.minimize(constrained_frames)
+        # constrained_frames = Sum([If(sz == 0, 0, 1) for sz in Frames[major_axis] + Frames[minor_axis]])
+        # s.minimize(constrained_frames)
         symmetric_padding = Sum([If(pre == post, 1, 0) for pre, post in
                                  zip(PrePad[minor_axis] + PrePad[major_axis],
                                      PostPad[minor_axis] + PostPad[major_axis])])

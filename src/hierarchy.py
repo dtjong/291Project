@@ -133,53 +133,19 @@ class Hierarchy(View):
                 child.cleanse()
 
     def to_swiftui(self):
-        '''
-        Example:
-        var body: some View {
-            VStack(
-                alignment: .leading,
-                spacing: 10
-        ) {
-                ForEach(
-                    1...10,
-                    id: \.self
-        ) {
-                Text("Item \($0)")
-                }
-            }
-        }
-        '''
-        # define the type of stack
-        stack = "HStack"
-        if self.view_type == ViewType.VStack:
-            stack = "VStack"
-
-        # define the parameters
-        params = []
+        suffix = super().to_swiftui()[len(VIEW_DEFAULT):]
+        stackargs = []
         if self.alignment != -1:
-            if stack == "HStack":
-                if self.alignment == 0:
-                    params.append("alignment: .top")
-                else:
-                    params.append("alignment: .bottom")
-            if stack == "VStack":
-                if self.alignment == 0:
-                    params.append("alignment: .leading")
-                else:
-                    params.append("alignment: .trailing")
+            if self.view_type == ViewType.VStack:
+                stackargs.append(f"alignment: {'.leading' if self.alignment == 0 else '.trailing'}")
+            if self.view_type == ViewType.HStack:
+                stackargs.append(f"alignment: {'.top' if self.alignment == 0 else '.bottom'}")
         if self.spacing_constraint > 0:
-            params.append("spacing: " + str(self.spacing_constraint))
+            stackargs.append(f"spacing: {self.spacing_constraint}")
+        stacktype = "HStack(" if self.view_type == ViewType.HStack else "VStack("
 
-        # combine into stack
-        stack = stack + "(" + ', '.join(params) + ")"
-
-        # define the content
-        contents = []
-        for res in self.children:
-            contents.append(res.to_swiftui())
-        stack = stack + "{\n" + '\n'.join(contents) + "\n}"
-
-        return stack + super().to_swiftui()[len(VIEW_DEFAULT):]
+        content = '\n'.join([view.to_swiftui() for view in self.children])
+        return stacktype + ', '.join(stackargs) + ') {\n' + content + '\n}' + suffix
 
     def deepcopy(self):
         children = [child.deepcopy() for child in self.children]

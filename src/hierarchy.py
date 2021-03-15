@@ -22,12 +22,10 @@ class Hierarchy(View):
             self.mean *= (len(self.views) + 1) / len(self.views)
             return view
 
-        def variance(self):
-            return statistics.variance([view.size(self.axis) for view in self.views], self.mean)
-
         def can_append(self, view, tolerance):
             self.append(view)
-            valid = (sum([view.size(self.axis) for view in self.views]) / len(self.views) - view.size(self.axis)) < tolerance
+            newmean = sum([view.size(self.axis) for view in self.views]) / len(self.views)
+            valid = abs((newmean - view.size(self.axis)) / self.mean) < tolerance
             self.pop()
             return valid
 
@@ -41,7 +39,7 @@ class Hierarchy(View):
         self.children = children
 
     def flatlist(self):
-        l =  [child.flatlist() if isinstance(child, Hierarchy) else [child] for child in self.children]
+        l = [child.flatlist() if isinstance(child, Hierarchy) else [child] for child in self.children]
         return reduce(lambda a, b: a + b, l)
 
     def solve(self):
@@ -56,7 +54,7 @@ class Hierarchy(View):
         draw. General workflow is cleanse -> solve -> to_swiftui
         '''
         # agree on size
-        SIZE_VARIANCE_TOLERANCE = 50
+        SIZE_TOLERANCE = .2
         for axis in [0, 1]:
             size_groups = []
             for view in self.children:
@@ -69,7 +67,7 @@ class Hierarchy(View):
                     size_groups.append(self.size_group(view, axis))
                 else:
                     size_groups = sorted(size_groups, key=lambda group: abs(group.mean - view.size(axis)))
-                    if size_groups[0].can_append(view, SIZE_VARIANCE_TOLERANCE):
+                    if size_groups[0].can_append(view, SIZE_TOLERANCE):
                         size_groups[0].append(view)
                     else:
                         size_groups.append(self.size_group(view, axis))
@@ -77,7 +75,7 @@ class Hierarchy(View):
                 g.enforce()
 
         # snap position
-        POS_TOLERANCE = 50
+        POS_TOLERANCE = .2
         major_axis = int(self.view_type)
         gap_groups = []
         dists = [0 for i in range(len(self.children) - 1)]
@@ -89,7 +87,8 @@ class Hierarchy(View):
             else:
                 added = False
                 for group in gap_groups:
-                    if abs(sum([p[0] for p in group]) / len(group) - dist) < POS_TOLERANCE:
+                    mean = sum([p[0] for p in group]) / len(group)
+                    if abs((mean - dist)/mean) < POS_TOLERANCE:
                         group.append((dist, i))
                         added = True
                         break
@@ -123,9 +122,8 @@ class Hierarchy(View):
                 # diff[minor_axis] = leading - view.top_left[minor_axis]
             # elif traildist < centdist:
                 # diff[minor_axis] = trailing - view.bot_right[minor_axis]
-            # else:
-                # diff[minor_axis] = center - view.center(minor_axis)
-            diff[minor_axis] = center - view.center(minor_axis)
+            if centdist / self.size(minor_axis) < .2:
+                diff[minor_axis] = center - view.center(minor_axis)
             view.move(diff)
 
         for child in self.children:
@@ -135,7 +133,7 @@ class Hierarchy(View):
     def to_swiftui(self):
         suffix = super().to_swiftui()[len(VIEW_DEFAULT):]
         stackargs = []
-        if self.alignment != -1:
+        if self.alignment != 1:
             if self.view_type == ViewType.VStack:
                 stackargs.append(f"alignment: {'.leading' if self.alignment == 0 else '.trailing'}")
             if self.view_type == ViewType.HStack:

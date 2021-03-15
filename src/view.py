@@ -1,4 +1,5 @@
 from enum import IntEnum
+from enum import Flag
 from copy import deepcopy
 import math
 
@@ -9,11 +10,19 @@ class ViewType(IntEnum):
     HStack = 1
     Leaf = 2
 
+class ViewMode(Flag):
+    Framed = True
+    Unframed = False
+
+    def __str__(self):
+        return "framed" if self else "unframed"
+
 class View:
-    def __init__(self, top_left, bot_right, view_type=ViewType.Leaf):
+    def __init__(self, top_left, bot_right, view_type=ViewType.Leaf, view_mode=ViewMode.Framed):
         self.top_left = top_left
         self.bot_right = bot_right
         self.view_type = view_type
+        self.view_mode = view_mode
 
         # Constraints for H/VStack
         self.spacing_constraint = 0
@@ -84,24 +93,24 @@ class View:
             fargs.append("width: " + str(self.frame_constraint[1]))
         if self.is_framed(0):
             fargs.append("height: " + str(self.frame_constraint[0]))
-        frame = (f".frame({', '.join(fargs)})") if len(fargs) > 0 else ""
+        frame = (f"\n.frame({', '.join(fargs)})") if len(fargs) > 0 else ""
 
         padstr = ""
         padding = self.padding_constraint
         if padding[0][0] == padding[0][1] and padding[0][0] > 0:
-            padstr += f".padding(.vertical, {padding[0][0]})"
+            padstr += f"\n.padding(.vertical, {padding[0][0]})"
         else:
             if padding[0][0] > 0:
-                padstr += f".padding(.top, {padding[0][0]})"
+                padstr += f"\n.padding(.top, {padding[0][0]})"
             if padding[0][1] > 0:
-                padstr += f".padding(.bottom, {padding[0][1]})"
+                padstr += f"\n.padding(.bottom, {padding[0][1]})"
 
         if padding[1][0] == padding[1][1] and padding[1][0] > 0:
-            padstr += f".padding(.horizontal, {padding[1][0]})"
+            padstr += f"\n.padding(.horizontal, {padding[1][0]})"
         else:
             if padding[1][0] > 0:
-                padstr += f".padding(.leading, {padding[1][0]})"
+                padstr += f"\n.padding(.leading, {padding[1][0]})"
             if padding[1][1] > 0:
-                padstr += f".padding(.trailing, {padding[1][1]})"
+                padstr += f"\n.padding(.trailing, {padding[1][1]})"
 
         return VIEW_DEFAULT + frame + padstr

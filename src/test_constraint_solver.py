@@ -24,11 +24,24 @@ class TestHierarchyInference(unittest.TestCase):
 
 class TestSolver(unittest.TestCase):
     def test_two_view_vstack(self):
-        root = View([0, 0], [100, 100], view_type=ViewType.VStack)
-        child1 = View([10, 11], [39, 89], root)
-        child2 = View([66, 30], [88, 60], root)
+        pass
+        # root = View([15, 15], [52, 322], view_type=ViewType.HStack)
+        # child1 = View([15, 15], [51, 50])
+        # child2 = View([15, 62], [51, 307], view_mode=ViewMode.Unframed)
+        # child3 = View([15, 362], [52, 322])
 
-        view_list = [root, child1, child2]
+        # view_list = [root, child1, child2, child3]
+        # views_output = ConstraintSolver(view_list).solve()
+
+    def test_two(self):
+        root = View([9.7, 8.5], [44.3, 364.75], view_type=ViewType.HStack)
+        child1 = View([9.7, 8.5], [44.3, 43.75])
+        child2 = View([9.7, 50.916666666666664], [44.3, 239.91666666666666], view_mode=ViewMode.Unframed)
+        child3 = View([9.7, 247.08333333333331], [44.3, 282.3333333333333])
+        child4 = View([9.7, 287.0833333333333], [44.3, 322.3333333333333])
+        child5 = View([9.7, 329.5], [44.3, 364.75])
+
+        view_list = [root, child1, child2, child3, child4, child5]
         views_output = ConstraintSolver(view_list).solve()
 
 # Testing constraint -> coord math

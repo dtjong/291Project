@@ -25,6 +25,8 @@ class Hierarchy(View):
         def can_append(self, view, tolerance):
             self.append(view)
             newmean = sum([view.size(self.axis) for view in self.views]) / len(self.views)
+            if newmean == 0:
+                return False
             valid = abs((newmean - view.size(self.axis)) / self.mean) < tolerance
             self.pop()
             return valid
@@ -43,7 +45,6 @@ class Hierarchy(View):
         return reduce(lambda a, b: a + b, l)
 
     def solve(self):
-        print([str(child) for child in [self] + self.children])
         ConstraintSolver([self] + self.children).solve()
         for child in self.children:
             if isinstance(child, Hierarchy):
@@ -88,7 +89,7 @@ class Hierarchy(View):
                 added = False
                 for group in gap_groups:
                     mean = sum([p[0] for p in group]) / len(group)
-                    if abs((mean - dist)/mean) < POS_TOLERANCE:
+                    if mean != 0 and abs((mean - dist)/mean) < POS_TOLERANCE:
                         group.append((dist, i))
                         added = True
                         break

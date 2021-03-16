@@ -104,7 +104,8 @@ class Canvas(tk.Tk):
 
     def on_button_release(self, event):
         curX, curY = (event.x, event.y)
-        self.views.append(View([self.start_y, self.start_x], [curY, curX], view_mode=self.view_mode))
+        self.views.append(View([min(self.start_y, curY), min(self.start_x, curX)],
+                               [max(self.start_y, curY), max(self.start_x, curX)], view_mode=self.view_mode))
 
     def clear(self):
         # Clear the canvas

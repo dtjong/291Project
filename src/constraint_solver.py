@@ -7,6 +7,7 @@ class ConstraintSolver:
         self.views = views
 
     def solve(self):
+        print('\n'.join([str(view) for view in self.views]))
         s = Optimize()
         Spacing = Real('Spacing')
         # 0 = leading, 1 = center, 2 = trailing
@@ -23,6 +24,7 @@ class ConstraintSolver:
         s.add(Alignment <= 2)
         def nonzero_list(l):
             for prop in l[0] + l[1]:
+                pass
                 s.add(prop >= 0)
         nonzero_list(Frames)
         nonzero_list(PrePad)
@@ -64,22 +66,27 @@ class ConstraintSolver:
 
             top_minor_acenter = (root.bot_right[minor_axis] - root.top_left[minor_axis] \
                                 - PrePad[minor_axis][i] - PostPad[minor_axis][i] - Frames[minor_axis][i]) / 2 \
-                                + top_minor_alead
+                                + root.top_left[minor_axis]
             bot_minor_acenter = top_minor_acenter + Frames[minor_axis][i]
 
             bot_minor_atrail = root.bot_right[minor_axis] - PostPad[minor_axis][i]
             top_minor_atrail = bot_minor_atrail - Frames[minor_axis][i]
 
-            s.add(view.top_left[major_axis] == top_major)
-            s.add(view.bot_right[major_axis] == bot_major)
-            s.add(view.top_left[minor_axis] == If(Frames[minor_axis][i] == 0,
+            tolerance = 1
+            def add_with_tolerance(a, b):
+                s.add(a==b)
+                # s.add(a-b < tolerance)
+                # s.add(a-b > -tolerance)
+            add_with_tolerance(view.top_left[major_axis], top_major)
+            add_with_tolerance(view.bot_right[major_axis], bot_major)
+            add_with_tolerance(view.top_left[minor_axis], If(Frames[minor_axis][i] == 0,
                                                   top_minor_nf,
                                                If(Alignment == 0,
                                                   top_minor_alead,
                                                If(Alignment == 1,
                                                   top_minor_acenter,
                                                   top_minor_atrail))))
-            s.add(view.bot_right[minor_axis] == If(Frames[minor_axis][i] == 0,
+            add_with_tolerance(view.bot_right[minor_axis], If(Frames[minor_axis][i] == 0,
                                                   bot_minor_nf,
                                                If(Alignment == 0,
                                                   bot_minor_alead,
@@ -88,16 +95,16 @@ class ConstraintSolver:
                                                   bot_minor_atrail))))
             # assert that frame matches
             if view.view_mode == ViewMode.Framed:
-                s.add(Frames[major_axis][i] > 0)
-                s.add(Frames[minor_axis][i] > 0)
+                s.add(Frames[major_axis][i] != 0)
+                s.add(Frames[minor_axis][i] != 0)
             else:
                 unframed_vmode += If(Frames[major_axis][i] == 0, 1, 0)
                 unframed_vmode += If(Frames[minor_axis][i] == 0, 1, 0)
         # Optimization
-        # for view in self.views[1:]:
-            # if view.view_mode == ViewMode.Unframed:
-                # s.maximize(unframed_vmode)
-                # break
+        for view in self.views[1:]:
+            if view.view_mode == ViewMode.Unframed:
+                s.maximize(unframed_vmode)
+                break
 
         # constrained_frames = Sum([If(sz == 0, 0, 1) for sz in Frames[major_axis] + Frames[minor_axis]])
         # s.minimize(constrained_frames)
@@ -130,6 +137,10 @@ class ConstraintSolver:
             for i, view in enumerate(self.views[1:]):
                 view.gen_frame(get_long(Frames[0][i]), get_long(Frames[1][i]))
                 view.gen_padding(get_long(PrePad[0][i]),
+                                 get_long(PostPad[0][i]),
+                                 get_long(PrePad[1][i]),
+                                 get_long(PostPad[1][i]))
+                print(get_long(PrePad[0][i]),
                                  get_long(PostPad[0][i]),
                                  get_long(PrePad[1][i]),
                                  get_long(PostPad[1][i]))

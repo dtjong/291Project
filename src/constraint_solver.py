@@ -8,7 +8,6 @@ class ConstraintSolver:
 
     def solve(self):
         print('\n'.join([str(view) for view in self.views]))
-        s = Optimize()
         Spacing = Real('Spacing')
         # 0 = leading, 1 = center, 2 = trailing
         Alignment = Int('Alignment')
@@ -19,12 +18,12 @@ class ConstraintSolver:
         PostPad = [[Real('PadBot' + str(i)) for i in range(len(self.views) - 1)],
                   [Real('PadRight' + str(i)) for i in range(len(self.views) - 1)]]
 
+        s = Optimize()
         s.add(Spacing >= 0)
         s.add(Alignment >= 0)
         s.add(Alignment <= 2)
         def nonzero_list(l):
             for prop in l[0] + l[1]:
-                pass
                 s.add(prop >= 0)
         nonzero_list(Frames)
         nonzero_list(PrePad)
@@ -144,7 +143,6 @@ class ConstraintSolver:
                                  get_long(PostPad[0][i]),
                                  get_long(PrePad[1][i]),
                                  get_long(PostPad[1][i]))
-            print(self.verify())
         else:
             print("UNSAT")
 

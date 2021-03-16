@@ -27,6 +27,8 @@ class Canvas(tk.Tk):
         self.snapbt.pack(side=tk.LEFT)
         self.resizebt = tk.Button(self.bar, text="resize", command=self.resize)
         self.resizebt.pack(side=tk.LEFT)
+        self.undobt = tk.Button(self.bar, text="undo", command=self.undo)
+        self.undobt.pack(side=tk.LEFT)
         self.framebt = tk.Button(self.bar, text=str(ViewMode.Framed), command=self.toggleframed)
         self.framebt.pack(side=tk.LEFT)
         self.bar.pack()
@@ -51,6 +53,17 @@ class Canvas(tk.Tk):
         self.height_entry.pack(side=tk.LEFT)
 
         self.view_mode = ViewMode.Framed
+
+    def undo(self):
+        self.views.pop()
+        views = self.views
+        self.clear()
+        self.views = views
+        for view in self.views[1:]:
+            self.canvas.create_rectangle(view.top_left[1], view.top_left[0],
+                                         view.bot_right[1], view.bot_right[0],
+                                         fill="black" if view.view_mode else
+                                         "white", tags="element")
 
     def toggleframed(self):
         self.view_mode = ~self.view_mode

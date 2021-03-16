@@ -43,28 +43,41 @@ class TestSolver(unittest.TestCase):
 
         # view_list = [root, child1, child2, child3, child4, child5]
         # views_output = ConstraintSolver(view_list).solve()
-
-    def test_three(self):
-        print("ONE")
-        troot = View([0, 0], [667, 375], view_type=ViewType.VStack)
-        root1 = View([6.100000000000001, 4.0], [35.9, 377.0], view_type=ViewType.HStack)
-        tleaf1 = View([51.0, 9.0], [611.0, 366.0], view_mode=ViewMode.Unframed)
-        tleaf2 = View([624.0, 9.0], [658.0, 366.0])
-        view_listr = [troot, root1, tleaf1, tleaf2]
-        views_outputt = ConstraintSolver(view_listr)
-        views_outputt.solve()
-
-        print("TWO")
-        root = View([6.100000000000001, 4.0], [35.9, 377.0], view_type=ViewType.HStack)
-        child1 = View([6.100000000000001, 4.0], [35.9, 41.0])
-        child2 = View([6.100000000000001, 62.5], [35.9, 139.5], view_mode=ViewMode.Unframed)
-        child3 = View([6.100000000000001, 161.0], [35.9, 198.0])
-        child4 = View([6.100000000000001, 230.5], [35.9, 307.5], view_mode=ViewMode.Unframed)
-        child5 = View([6.100000000000001, 340.0], [35.9, 377.0])
+    def test_four(self):
+        root = View([0, 0], [667, 375], view_type=ViewType.HStack)
+        child1 = View([12, 9], [54.666666666666664, 187.5])
+        child2 = View([66.0, 90.16666666666669], [130.0, 284.8333333333333])
+        child3 = View([139.0, 125.5], [203.0, 249.5])
+        child4 = View([234.83333333333334, 45.5], [350.83333333333337, 323.5])
+        child5 = View([382.66666666666674, 125.5], [484.66666666666674, 249.5], view_mode=ViewMode.Unframed)
+        child6 = View([516.0000000000001, 90.16666666666669], [558.6666666666667, 284.8333333333333])
+        child7 = View([590.0000000000001, 90.16666666666669], [632.6666666666667, 284.8333333333333])
 
         view_list = [root, child1, child2, child3, child4, child5]
         views_output = ConstraintSolver(view_list)
         views_output.solve()
+
+    # def test_three(self):
+        # print("ONE")
+        # troot = View([0, 0], [667, 375], view_type=ViewType.VStack)
+        # root1 = View([6.100000000000001, 4.0], [35.9, 377.0], view_type=ViewType.HStack)
+        # tleaf1 = View([51.0, 9.0], [611.0, 366.0], view_mode=ViewMode.Unframed)
+        # tleaf2 = View([624.0, 9.0], [658.0, 366.0])
+        # view_listr = [troot, root1, tleaf1, tleaf2]
+        # views_outputt = ConstraintSolver(view_listr)
+        # views_outputt.solve()
+
+        # print("TWO")
+        # root = View([6.100000000000001, 4.0], [35.9, 377.0], view_type=ViewType.HStack)
+        # child1 = View([6.100000000000001, 4.0], [35.9, 41.0])
+        # child2 = View([6.100000000000001, 62.5], [35.9, 139.5], view_mode=ViewMode.Unframed)
+        # child3 = View([6.100000000000001, 161.0], [35.9, 198.0])
+        # child4 = View([6.100000000000001, 230.5], [35.9, 307.5], view_mode=ViewMode.Unframed)
+        # child5 = View([6.100000000000001, 340.0], [35.9, 377.0])
+
+        # view_list = [root, child1, child2, child3, child4, child5]
+        # views_output = ConstraintSolver(view_list)
+        # views_output.solve()
 
 # Testing constraint -> coord math
 class TestConstraints(unittest.TestCase):

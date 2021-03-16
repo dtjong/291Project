@@ -37,7 +37,7 @@ class ConstraintSolver:
                          + Sum(PrePad[major_axis]) \
                          + Sum(PostPad[major_axis]) \
                          + Spacing * (len(self.views) - 2))) / 2
-        # s.add(stack_top_left - root.top_left[major_axis] >= -3)
+        s.add(stack_top_left - root.top_left[major_axis] >= -3)
 
         unframed_vmode = 0
 
@@ -65,7 +65,7 @@ class ConstraintSolver:
 
             top_minor_acenter = (root.bot_right[minor_axis] - root.top_left[minor_axis] \
                                 - PrePad[minor_axis][i] - PostPad[minor_axis][i] - Frames[minor_axis][i]) / 2 \
-                                + root.top_left[minor_axis]
+                                + top_minor_alead
             bot_minor_acenter = top_minor_acenter + Frames[minor_axis][i]
 
             bot_minor_atrail = root.bot_right[minor_axis] - PostPad[minor_axis][i]
@@ -131,7 +131,7 @@ class ConstraintSolver:
             print(m)
             def get_long(realval):
                 return m[realval].numerator_as_long() / m[realval].denominator_as_long()
-            view.alignment = m[Alignment].as_long()
+            root.alignment = m[Alignment].as_long()
             root.gen_spacing(get_long(Spacing))
             for i, view in enumerate(self.views[1:]):
                 view.gen_frame(get_long(Frames[0][i]), get_long(Frames[1][i]))
